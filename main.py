@@ -30,18 +30,28 @@ def get(book, chapter, verse):
         return None
     content = response.content.decode('utf-8')
     return json.loads(content)
-def getBook(text, scripture):
+def getBook(text, scripture, book):
     counter = 1
     chapterCounter = 1
     while scripture is not None:
         while scripture is not None:
             counter += 1
-            scripture = get(Alma, str(chapterCounter), str(counter))
+            scripture = get(book, str(chapterCounter), str(counter))
             if scripture is None:
                 break
             text += " "
             text += scripture["text"]
         chapterCounter += 1
+    return text
+def getChapter(text, scripture, book, chapter):
+    counter = 1
+    while scripture is not None:
+        counter += 1
+        scripture = get(book, chapter, str(counter))
+        if scripture is None:
+            break
+        text += " "
+        text += scripture["text"]
     return text
 def generateWordCloud(text):
     wordcloud = WordCloud( max_words=100, background_color="white").generate(text)
@@ -50,8 +60,23 @@ def generateWordCloud(text):
     plt.axis("off")
     plt.show()
 
-scripture = get(Omni, "1", "1")
-text = scripture["text"]
-text = getBook(text, scripture)
-generateWordCloud(text)
+def GetWordCloudVerse(book, chapter, verse):
+    scripture = get(book, chapter, verse)
+    text = scripture["text"]
+    generateWordCloud(text)
+
+def GetWordCloudBook(book):
+    scripture = get(book, "1", "1")
+    text = scripture["text"]
+    text = getBook(text, scripture, book)
+    generateWordCloud(text)
+
+def GetWordCloudChapter(book, chapter):
+    scripture = get(book, chapter, "1")
+    text = scripture["text"]
+    text = getChapter(text, scripture, book, chapter)
+    generateWordCloud(text)
+
+GetWordCloudVerse(Alma, "2", "29")
+
 
