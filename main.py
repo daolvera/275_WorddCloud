@@ -1,8 +1,18 @@
-# Start with one review:
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.requests import Request
+from starlette.responses import HTMLResponse
+from starlette.templating import Jinja2Templates
 from matplotlib import pyplot as plt
 from wordcloud import WordCloud
 import requests
 import json
+
+
+app = FastAPI()
+
 
 
 #constants
@@ -16,7 +26,7 @@ Omni = "omni"
 WordsofMormon = "wordsofmormon"
 Mosiah = "mosiah"
 Alma = "alma"
-Heleman = "helaman"
+Helaman = "helaman"
 ThirdNephi = "3nephi"
 FourthNephi = "4nephi"
 Mormon = "mormon"
@@ -53,30 +63,85 @@ def getChapter(text, scripture, book, chapter):
         text += " "
         text += scripture["text"]
     return text
-def generateWordCloud(text):
+def generateWordCloud(text, title):
     wordcloud = WordCloud( max_words=100, background_color="white").generate(text)
     plt.figure()
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
-    plt.show()
-
+    #plt.show()
+    outputFile = "output/" + title + ".png"
+    wordcloud.to_file(outputFile)
 def GetWordCloudVerse(book, chapter, verse):
     scripture = get(book, chapter, verse)
     text = scripture["text"]
-    generateWordCloud(text)
+    title = book + chapter + "_" + verse
+    generateWordCloud(text, title)
 
 def GetWordCloudBook(book):
     scripture = get(book, "1", "1")
     text = scripture["text"]
     text = getBook(text, scripture, book)
-    generateWordCloud(text)
+    generateWordCloud(text, book)
+
 
 def GetWordCloudChapter(book, chapter):
     scripture = get(book, chapter, "1")
     text = scripture["text"]
     text = getChapter(text, scripture, book, chapter)
-    generateWordCloud(text)
+    title = book + chapter
+    generateWordCloud(text, title)
 
-GetWordCloudVerse(Alma, "2", "29")
+#GetWordCloudBook(Alma)
+
+def ConsoleProgram():
+    print("My program can give you a word cloud of a single verse, a chapter, or a whole book of the Book of Mormon")
+    choice = input("What would you like to do? Input 1 for a verse, 2 for a chapter, and 3 for a book: ")
+    if choice == "1":
+        book = input("Which book: ")
+        chapter = input("Which chapter: ")
+        verse = input("Which verse: ")
+        GetWordCloudVerse(book, chapter, verse)
+    if choice == "2":
+        book = input("Which book: ")
+        chapter = input("Which chapter: ")
+        GetWordCloudChapter(book, chapter)
+    else:
+        book = input("Which book: ")
+        GetWordCloudBook(book)
 
 
+templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/wordcloud")
+async def get_word_cloud(book: str, chapter: str, verse: str):
+    # Call the function to generate the word cloud
+    GetWordCloudVerse(book, chapter, verse)
+
+    # Return the word cloud image file
+    return FileResponse("output/{}{}_{}.png".format(book, chapter, verse))
+
+@app.get("/wordcloud2")
+async def get_word_cloud(book: str, chapter: str):
+    # Call the function to generate the word cloud
+    GetWordCloudChapter(book, chapter)
+
+    # Return the word cloud image file
+    return FileResponse("output/{}{}.png".format(book, chapter))
+
+@app.get("/wordcloud1")
+async def get_word_cloud(book: str):
+    # Call the function to generate the word cloud
+    GetWordCloudBook(book)
+
+    # Return the word cloud image file
+    return FileResponse("output/{}.png".format(book))
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

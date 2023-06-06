@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book of Mormon Word Cloud Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f2f2f2;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #e0e0e0;
+        }
+
+        label {
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        select,
+        input[type="number"] {
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #wordCloudImage {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .error-message {
+            color: #ff0000;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Book of Mormon Word Cloud Generator</h1>
+    <form id="wordCloudForm">
+        <label for="book">Book:</label>
+        <select id="book" name="book" required>
+            <option value="1nephi">1st Nephi</option>
+            <option value="2nephi">2nd Nephi</option>
+            <option value="jacob">Jacob</option>
+            <option value="enos">Enos</option>
+            <option value="jarom">Jarom</option>
+            <option value="omni">Omni</option>
+            <option value="wordsofmormon">Words of Mormon</option>
+            <option value="mosiah">Mosiah</option>
+            <option value="alma">Alma</option>
+            <option value="helaman">Helaman</option>
+            <option value="3nephi">3rd Nephi</option>
+            <option value="4nephi">4th Nephi</option>
+            <option value="mormon">Mormon</option>
+            <option value="ether">Ether</option>
+            <option value="moroni">Moroni</option>
+        </select>
+
+        <label for="chapter">Chapter:</label>
+        <input type="number" id="chapter" name="chapter">
+
+        <label for="verse">Verse:</label>
+        <input type="number" id="verse" name="verse">
+
+        <button type="submit">Generate Word Cloud</button>
+    </form>
+
+    <div id="wordCloudImage"></div>
+
+    <script>
+        const form = document.getElementById('wordCloudForm');
+        const wordCloudImage = document.getElementById('wordCloudImage');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const book = document.getElementById('book').value;
+            const chapter = document.getElementById('chapter').value;
+            const verse = document.getElementById('verse').value;
+            if (chapter == "" && verse == ""){
+                console.log("neither");
+                generateWordCloud1(book);
+            }
+            else if (verse == ""){
+                console.log("just verse gone");
+                generateWordCloud2(book, chapter);
+            }
+            else{
+                console.log("all");
+                generateWordCloud(book, chapter, verse);
+            }
+        });
+
+        async function generateWordCloud(book, chapter, verse) {
+            try {
+                const response = await fetch(`/wordcloud?book=${book}&chapter=${chapter}&verse=${verse}`);
+                if (!response.ok) {
+                    throw new Error('Word cloud generation failed');
+                }
+
+                const imageUrl = await response.blob();
+                wordCloudImage.innerHTML = `<img src="${URL.createObjectURL(imageUrl)}">`;
+            } catch (error) {
+                console.error(error);
+                wordCloudImage.innerHTML = '<p>Word cloud generation failed. Please try again.</p>';
+            }
+        }
+        async function generateWordCloud2(book, chapter) {
+            try {
+                const response = await fetch(`/wordcloud2?book=${book}&chapter=${chapter}`);
+                if (!response.ok) {
+                    throw new Error('Word cloud generation failed');
+                }
+
+                const imageUrl = await response.blob();
+                wordCloudImage.innerHTML = `<img src="${URL.createObjectURL(imageUrl)}">`;
+            } catch (error) {
+                console.error(error);
+                wordCloudImage.innerHTML = '<p>Word cloud generation failed. Please try again.</p>';
+            }
+        }
+        async function generateWordCloud1(book) {
+            try {
+                const response = await fetch(`/wordcloud1?book=${book}`);
+                if (!response.ok) {
+                    throw new Error('Word cloud generation failed');
+                }
+
+                const imageUrl = await response.blob();
+                wordCloudImage.innerHTML = `<img src="${URL.createObjectURL(imageUrl)}">`;
+            } catch (error) {
+                console.error(error);
+                wordCloudImage.innerHTML = '<p>Word cloud generation failed. Please try again.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
