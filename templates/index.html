@@ -133,7 +133,7 @@
 
             try {
                 let response;
-                if (!chapter && !verse) {
+                if (!chapter) {
                     response = await fetch(`/wordcloud1?book=${book}`);
                 } else if (chapter && !verse) {
                     response = await fetch(`/wordcloud2?book=${book}&chapter=${chapter}`);
