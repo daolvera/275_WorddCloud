@@ -64,7 +64,7 @@ def getChapter(text, scripture, book, chapter):
         text += scripture["text"]
     return text
 def generateWordCloud(text, title):
-    wordcloud = WordCloud( max_words=100, background_color="white").generate(text)
+    wordcloud = WordCloud( max_words=100, background_color="white", scale=3.0).generate(text)
     plt.figure()
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
@@ -116,7 +116,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
-
 
 @app.get("/wordcloud")
 async def get_word_cloud(book: str, chapter: str, verse: str):
